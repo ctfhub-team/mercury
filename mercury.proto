@@ -1,0 +1,106 @@
+syntax = "proto3";
+
+package ctfhub.mercury.v1;
+
+import "google/api/annotations.proto";
+import "k8s.io/api/core/v1/generated.proto";
+import "k8s.io/api/events/v1/generated.proto";
+import "meta.proto";
+
+message Empty {}
+message K8s {
+  string name = 1;
+  string namespace = 2;
+}
+message NameReq {
+  string name = 1;
+  K8s k8s = 99;
+}
+message ListReq { K8s k8s = 99; }
+message ExecReq {
+  string name = 1;
+  int64 index = 2;
+  string command = 3;
+  K8s k8s = 99;
+}
+message DeployReq {
+  message Config {
+    string name = 1;     // pod_name
+    string endpoint = 2; // domain
+    string flag = 3;     // flag
+    optional bool egress = 4;
+    optional bool tcpdump = 5;
+    repeated string expose = 6;                       // port
+    repeated ctfhub.meta.v1.Container containers = 7; // containers
+  }
+  Config config = 1;
+  K8s k8s = 99;
+}
+message PodRsp { k8s.io.api.core.v1.Pod pod = 1; }
+message ListRsp { k8s.io.api.core.v1.PodList items = 1; }
+message EventRsp { k8s.io.api.events.v1.EventList items = 1; }
+message LogRsp {
+  message Log {
+    string name = 1;
+    string data = 2;
+  }
+  repeated Log data = 1;
+}
+message ExecRsp { string stdout = 1; }
+
+service Mercury {
+  rpc Deploy(DeployReq) returns (PodRsp) {
+    option (google.api.http) = {
+      post : "/v1/deploy"
+      body : "*"
+    };
+  }
+  rpc Inspect(NameReq) returns (PodRsp) {
+    option (google.api.http) = {
+      post : "/v1/inspect"
+      body : "*"
+    };
+  }
+  rpc List(ListReq) returns (ListRsp) {
+    option (google.api.http) = {
+      post : "/v1/list"
+      body : "*"
+    };
+  }
+  rpc Remove(NameReq) returns (Empty) {
+    option (google.api.http) = {
+      post : "/v1/remove"
+      body : "*"
+    };
+  }
+  rpc Log(NameReq) returns (LogRsp) {
+    option (google.api.http) = {
+      post : "/v1/log"
+      body : "*"
+    };
+  }
+  rpc Exec(ExecReq) returns (ExecRsp) {
+    option (google.api.http) = {
+      post : "/v1/exec"
+      body : "*"
+    };
+  }
+  rpc Event(NameReq) returns (EventRsp) {
+    option (google.api.http) = {
+      post : "/v1/event"
+      body : "*"
+    };
+  }
+  rpc Watch(NameReq) returns (stream PodRsp) {
+    option (google.api.http) = {
+      post : "/v1/watch"
+      body : "*"
+    };
+  }
+  rpc LogStream(NameReq) returns (stream LogRsp.Log) {
+    option (google.api.http) = {
+      post : "/v1/log/sse"
+      body : "*"
+    };
+  }
+}

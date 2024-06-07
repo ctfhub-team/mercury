@@ -1,0 +1,12 @@
+version: v2
+name: buf.build/ctfhub/mercury
+deps:
+  - buf.build/googleapis/googleapis
+  - buf.build/k8s/api
+  - buf.build/ctfhub/meta
+breaking:
+  use:
+    - FILE
+lint:
+  use:
+    - DEFAULT
